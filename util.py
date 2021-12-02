@@ -1,15 +1,19 @@
 import sys
 import re
 import yaml
+import json
+import secrets
 from pathlib import Path
 
 
-def user_abort(msg):
+def user_abort(msg=None):
     if msg:
         print('User abort: {}'.format(msg))
-    else:
-        print('User abort.')
     exit(0)
+
+
+def info(msg):
+    print('[Info] {}'.format(msg))
 
 
 def invalid_format(arg_name, arg_value):
@@ -49,7 +53,14 @@ def ask_variable(name, default=None):
         return default if val == '' else val
 
 
-def read_yaml(path: Path):
+def ask_confirm(msg, default: bool):
+    confirm = ask_variable('{} (y/n)'.format(msg), 'y' if default else 'n')[0]
+    if confirm not in ['y', 'Y', 'n', 'N']:
+        error('Please answer y/n.')
+    return True if confirm in ['y', 'Y'] else False
+
+
+def read_yaml(path: Path) -> dict:
     with open(path, 'r', encoding='utf-8') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
     return data
@@ -58,6 +69,17 @@ def read_yaml(path: Path):
 def write_yaml(path: Path, data: dict):
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(data=data, stream=f, allow_unicode=True)
+
+
+def read_json(path: Path) -> dict:
+    with open(path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return data
+
+
+def write_json(path: Path, data):
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(json.dumps(data, ensure_ascii=False))
 
 
 def decode_range(data: str, range_name='range'):
@@ -73,3 +95,7 @@ def decode_range(data: str, range_name='range'):
 def encode_range(low: int, high: int):
     return '{}-{}'.format(low, high)
 
+
+def generate_random_password(alphabet, length):
+    password = ''.join(secrets.choice(alphabet) for i in range(length))
+    return password

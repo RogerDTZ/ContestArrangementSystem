@@ -1,7 +1,4 @@
-import os
-import re
-import sys
-from pathlib import Path
+import contestant
 from util import *
 
 
@@ -11,12 +8,17 @@ class Contest:
     team_category_id: int
     team_id_range: tuple
     lock: bool
+    teamid_pool: set
+    capacity: int
 
     def __init__(self, path, title, team_category_id, team_id_range, lock):
         self.path = path
         self.title = title
         self.team_category_id = team_category_id
         self.team_id_range = team_id_range
+        # TODO: capacity = min(id_range, seat num)
+        self.teamid_pool = set(range(self.team_id_range[0], self.team_id_range[1] + 1))
+        self.capacity = len(self.teamid_pool)
         self.lock = lock
 
     def write(self):
@@ -31,22 +33,76 @@ class Contest:
         self.lock = lock
         self.write()
 
+    def locked(self):
+        return self.lock
 
-def is_contest_directory(path):
+    def get_available_teamid(self):
+        if len(self.teamid_pool) == 0:
+            error('No available team id.')
+        for team_id in self.teamid_pool:
+            return team_id
+
+    def occupy_teamid(self, team_id):
+        if team_id not in self.teamid_pool:
+            return False
+        self.teamid_pool.remove(team_id)
+        return True
+
+    def release_teamid(self, team_id):
+        if team_id < self.team_id_range[0] or team_id > self.team_id_range[1]:
+            error('Team id {} is not in the valid range.'.format(team_id))
+        if team_id in self.teamid_pool:
+            error('Unexpected: team id {} is already available.'.format(team_id))
+        self.teamid_pool.add(team_id)
+
+    def print(self):
+        print("""
++-----------------------------------------------+
+|              Contest Information              |
++-----------------------------------------------+
+ title:               {}
+ lock state:          [{}]
+ team_category id:    {}
+ team_id range:       {}
+ capacity:            {}
+        """.format(
+            self.title,
+            'locked' if self.lock else 'unlocked',
+            self.team_category_id,
+            '{} ~ {}'.format(self.team_id_range[0], self.team_id_range[1]),
+            '{} / {}'.format(contestant.get_contestants_num(), self.capacity)
+        ))
+
+
+g_contest = None
+
+
+def is_contest_directory(path=Path('.')):
     return (path / 'contest.yaml').is_file()
 
 
-def get_contest(path=Path('.')):
+def ensure_contest_directory(path=Path('.')):
     if not is_contest_directory(path):
         error('Is this a contest directory? contest.yaml not found.')
+
+
+def get_contest():
+    global g_contest
+
+    if g_contest is not None:
+        return g_contest
+
+    path = Path('.')
+    ensure_contest_directory(path)
     data = read_yaml(path / 'contest.yaml')
-    return Contest(
+    g_contest = Contest(
         path,
         data['title'],
         int(data['team_category_id']),
         decode_range(data['team_id_range'], 'team_id_rage'),
         bool(data['lock'])
     )
+    return g_contest
 
 
 def create_contest():
@@ -64,10 +120,37 @@ def create_contest():
 
 
 def toggle_lock(lock):
-    if not is_contest_directory(Path('.')):
-        error('Is this a contest directory? contest.yaml not found.')
+    ensure_contest_directory()
     contest = get_contest()
-    contest.toggle_lock(lock)
-    contest.write()
+    if lock != contest.lock:
+        if not lock:
+            if ask_variable('Are you sure? (y/n)', 'n')[0] not in ['y', 'Y']:
+                user_abort()
+        contest.toggle_lock(lock)
+        contest.write()
+    contest.print()
 
+
+def contest_locked():
+    return get_contest().locked()
+
+
+def get_capacity():
+    return get_contest().capacity
+
+
+def contest_full():
+    return contestant.get_contestants_num() == get_contest().capacity
+
+
+def occupy_teamid(team_id):
+    return get_contest().occupy_teamid(team_id)
+
+
+def release_teamid(team_id):
+    return get_contest().release_teamid(team_id)
+
+
+def get_available_teamid():
+    return get_contest().get_available_teamid()
 

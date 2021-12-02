@@ -16,6 +16,8 @@
 
 * `cas contest unlock`: Allow changes.
 
+* `cas contest show`: Show contest information.
+
 # Contestant Management
 
 Contestant section:
@@ -80,11 +82,11 @@ Contestant section:
 
 * `cas contestant unseat [id]`: Unseat a contestant or all contestants (verify twice).
 
-* `cas contestant genpass [id] [--force] [--manual]`: Generate password for a contestant or all (double check) contestants.
+* `cas contestant genpass [id] [--override] [--alphabet=alphabet] [--length=len]`: Generate password for a contestant or all (double check) contestants.
 
   Raise exception if:
 
-  * some contestant has already have a password. (add `--force` to ignore that)
+  * some contestant has already have a password. (add `--override` to ignore that)
 
 # Seat Management
 
@@ -151,3 +153,4 @@ Contestant section:
   * some contestant is not seated.
 
   The export time should be included in the filename and the headline.
+

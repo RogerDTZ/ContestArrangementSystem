@@ -1,6 +1,5 @@
 from util import *
 import config
-import contest
 import contestant
 
 
@@ -42,8 +41,8 @@ def valid_formatted_seat(formatted_str: str):
 def decode_seat(formatted_str):
     if not valid_formatted_seat(formatted_str):
         invalid_format('Seat', formatted_str)
-    l = formatted_str.strip().split('-')
-    return Seat(l[0], l[1])
+    seat_info = formatted_str.strip().split('-')
+    return Seat(seat_info[0], seat_info[1])
 
 
 def create_seat(room, seat_id):
@@ -219,4 +218,3 @@ def get_room_info():
 
 def get_seats_num():
     return len(get_seats()[0])
-

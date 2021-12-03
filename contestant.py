@@ -44,30 +44,22 @@ class Contestant:
         }
 
     def print(self, print_password=False, no_header=False):
-        width = 100
-        line = '+' + '-' * width + '+'
+        width = 50
+        left = 10
         if not no_header:
-            print(line)
-            print('|{}|'.format('Contestant Information'.center(width)))
-            print(line)
+            print(table_line(width))
+            print(table_row('Contestant Information', width))
+            print(table_line(width))
 
-        print(""" contestant id:  {}
- team_id:        {}
- name:           {}
- sid:            {}
- affiliation:    {}
- location:       {}
- password:       {}
-{}""".format(
-            self.id,
-            self.team_id,
-            self.name,
-            self.sid if self.sid and len(self.sid) > 0 else '[None]',
-            self.affiliation,
-            self.seat_formatted_str if self.seat_formatted_str else '[Unseated]',
-            self.password if print_password else ('[Generated]' if self.password else 'None'),
-            line
-        ))
+        print(table_row('contestant id:  {}'.format(self.id), width=width, left=left))
+        print(table_row('team_id:        {}'.format(self.team_id), width=width, left=left))
+        print(table_row('name:           {}'.format(self.name), width=width, left=left))
+        print(table_row('sid:            {}'.format(self.sid if self.sid and len(self.sid) > 0 else '[None]'), width=width, left=left))
+        print(table_row('affiliation:    {}'.format(self.affiliation), width=width, left=left))
+        print(table_row('location:       {}'.format(self.seat_formatted_str if self.seat_formatted_str else '[Unseated]'), width=width, left=left))
+        print(table_row('password:       {}'.format(self.password if print_password else ('[Generated]' if self.password else 'None')), width=width, left=left))
+
+        print(table_line(width))
 
 
 g_init = False

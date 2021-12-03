@@ -45,7 +45,6 @@ def fatal(msg):
 
 def ask_variable(name, default=None):
     if default is None:
-        val = ''
         while True:
             print(f"{name}: ", end='', file=sys.stderr)
             val = input()
@@ -138,4 +137,3 @@ def table_row(content: str, width, left=-1):
     if left == -1:
         return '|' + content.center(width) + '|'
     return '|' + content.ljust(width - 2 * left).center(width) + '|'
-

@@ -154,4 +154,3 @@ def release_teamid(team_id):
 
 def get_available_teamid():
     return get_contest().get_available_teamid()
-

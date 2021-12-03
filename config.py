@@ -6,7 +6,10 @@ args = argparse.Namespace()
 
 default_args = {
     'pwd_alphabet': string.ascii_lowercase + string.digits,
-    'pwd_length': 8
+    'pwd_length': 8,
+    'manual_seat': False,
+    'override_seat': False,
+    'random_apply_seat': False,
 }
 
 

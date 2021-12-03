@@ -104,15 +104,13 @@ Contestant section:
 
   * the new seat conflicts with an existing seat.
 
-* `cas seat remove room_number seat_number`: Remove a seat.
+* `cas seat remove show seat_id`: Remove a seat.
 
   Raise exception if:
 
   * some contestant is using the seat.
 
-* `cas seat show room_number seat_number`: Check who is using the seat.
-
-* `cas seat list`: Print all information of all seats.
+* `cas seat show room seat_id`: Check who is using the seat.:
 
 * `cas seat where team_id`: Find out where is a specific team seated.
 

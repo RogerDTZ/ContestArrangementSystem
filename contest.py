@@ -1,5 +1,6 @@
-import contestant
 from util import *
+import contestant
+import seat
 
 
 class Contest:
@@ -16,9 +17,8 @@ class Contest:
         self.title = title
         self.team_category_id = team_category_id
         self.team_id_range = team_id_range
-        # TODO: capacity = min(id_range, seat num)
         self.teamid_pool = set(range(self.team_id_range[0], self.team_id_range[1] + 1))
-        self.capacity = len(self.teamid_pool)
+        self.capacity = min(len(self.teamid_pool), seat.get_seats_num())
         self.lock = lock
 
     def write(self):
@@ -39,8 +39,7 @@ class Contest:
     def get_available_teamid(self):
         if len(self.teamid_pool) == 0:
             error('No available team id.')
-        for team_id in self.teamid_pool:
-            return team_id
+        return min(self.teamid_pool)
 
     def occupy_teamid(self, team_id):
         if team_id not in self.teamid_pool:
@@ -57,21 +56,23 @@ class Contest:
 
     def print(self):
         print("""
-+-----------------------------------------------+
-|              Contest Information              |
-+-----------------------------------------------+
  title:               {}
  lock state:          [{}]
  team_category id:    {}
  team_id range:       {}
+ room:                {}
+ available seats:     {}
  capacity:            {}
         """.format(
             self.title,
             'locked' if self.lock else 'unlocked',
             self.team_category_id,
             '{} ~ {}'.format(self.team_id_range[0], self.team_id_range[1]),
-            '{} / {}'.format(contestant.get_contestants_num(), self.capacity)
+            seat.get_room_info(),
+            seat.get_seats_num(),
+            '{} / {}'.format(contestant.get_contestants_num(), self.capacity),
         ))
+        # TODO: add affiliation information
 
 
 g_contest = None

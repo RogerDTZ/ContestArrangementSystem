@@ -8,6 +8,7 @@ import signal
 import config
 import contest
 import contestant
+import seat
 from util import *
 
 from pathlib import Path
@@ -53,10 +54,14 @@ def build_parser():
     contestant_show.add_argument('-p', '--print-password', action='store_true', default=False, help='Print the password.')
     contestant_seat = contestant_subparsers.add_parser('seat', help='Seat a contestant.')
     contestant_seat.add_argument('id', type=int, help='ID of the contestant to be seated.')
-    contestant_seat.add_argument('--auto', action='store_true', default=False, help='Auto seat the contestant.')
+    contestant_seat.add_argument('--manual', '-m', dest='manual_seat', action='store_true', default=False, help='Manually seat the contestant.')
+    contestant_seat.add_argument('--override', '-o', dest='override_seat', action='store_true', default=False, help='Override the current seat.')
+    contestant_seat.add_argument('--random', '-r', dest='random_apply_seat', action='store_true', default=False, help='Randomly apply a seat (for automatic mode).')
     contestant_seatall = contestant_subparsers.add_parser('seatall', help='Seat all unseated contestants.')
+    contestant_seatall.add_argument('--random', '-r', dest='random_apply_seat', action='store_true', default=False, help='Randomly apply a seat (for automatic mode).')
     contestant_unseat = contestant_subparsers.add_parser('unseat', help='Unseat a contestant.')
     contestant_unseat.add_argument('id', type=int, nargs='?', default=-1, help='ID of the contestant to be unseated..')
+    contestant_unseatall = contestant_subparsers.add_parser('unseatall', help='Unseat all seated contestants.')
     contestant_genpass = contestant_subparsers.add_parser('genpass', help='Generate password for a contestant.')
     contestant_genpass.add_argument('id', type=int, nargs='?', default=-1, const=-1,
                                     help='ID of the contestant to ' 'generate password.')
@@ -70,11 +75,20 @@ def build_parser():
     seat_subparsers = seat_parser.add_subparsers(title='actions', dest='subaction', parser_class=SuppressingParser)
     seat_subparsers.required = True
     seat_add = seat_subparsers.add_parser('add', help='Add a seat.')
+    seat_add.add_argument('room', type=str)
+    seat_add.add_argument('seat_id', type=str)
     seat_import = seat_subparsers.add_parser('import', help='Import seats from a tsv file.')
+    seat_import.add_argument('file_path', type=Path, help='Path to the tsv file.')
     seat_remove = seat_subparsers.add_parser('remove', help='Remove a seat.')
+    seat_remove.add_argument('room', type=str)
+    seat_remove.add_argument('seat_id', type=str)
     seat_show = seat_subparsers.add_parser('show', help='Find out that who is using a specific seat.')
-    seat_where = seat_subparsers.add_parser('where', help='Find out where is a specific team seated.')
-    seat_list = seat_subparsers.add_parser('list', help='List all seats and their information.')
+    seat_show.add_argument('room', type=str)
+    seat_show.add_argument('seat_id', type=str)
+    seat_showroom = seat_subparsers.add_parser('showroom', help='Show a room.')
+    seat_showroom.add_argument('room', type=str)
+    seat_where = seat_subparsers.add_parser('where', help='Find out where is a team seated.')
+    seat_where.add_argument('team_id', type=int)
 
     affiliation_parser = subparsers.add_parser('affiliation', help='Manage affiliations.')
     affiliation_subparsers = affiliation_parser.add_subparsers(title='actions', dest='subaction',
@@ -99,27 +113,34 @@ def run_parsed_arguments(args):
 
     action = config.args.action
 
+    if action == 'contest' and config.args.subaction == 'create':
+        contest.create_contest()
+        return
+
+    # Ensure that current directory is the contest directory.
+    contest.ensure_contest_directory()
+    # TODO: Load affiliation information.
+    # Load the seats.
+    seat.get_seats()
+    # Preload the contest.
+    contest.get_contest()
+    # Preload the contestants.
+    contestant.get_contestants()
+
     if action == 'contest':
         subaction = config.args.subaction
-        if subaction == 'create':
-            contest.create_contest()
         if subaction in ['lock', 'unlock']:
             contest.toggle_lock(subaction == 'lock')
         if subaction == 'show':
             contest.get_contest().print()
         return
 
-    # Ensure that current directory is the contest directory.
-    contest.ensure_contest_directory()
-    # TODO: Load seats information and affiliation information.
-    # Preload the contest.
-    contest.get_contest()
-
     if action == 'contestant':
         subaction = config.args.subaction
-        contestant.get_contestants()
-        if contest.contest_locked() and subaction in ['add', 'import', 'remove', 'seat', 'seatall', 'unseat', 'genpass']:
+
+        if contest.contest_locked() and subaction in ['add', 'import', 'remove', 'seat', 'seatall', 'unseat', 'unseatall', 'genpass']:
             error('Contest "{}" has been locked.'.format(contest.get_contest().title))
+
         if subaction == 'add':
             contestant.create_contestant_interactive()
         if subaction == 'import':
@@ -132,17 +153,39 @@ def run_parsed_arguments(args):
             else:
                 contestant.show_information_all(config.args.print_password)
         if subaction == 'seat':
-            pass
+            contestant.seat_contestant(config.args.id, manual=config.args.manual_seat, random_apply=config.args.random_apply_seat, override=config.args.override_seat)
         if subaction == 'seatall':
-            pass
+            contestant.seat_all_contestants(random_apply=config.args.random_apply_seat)
         if subaction == 'unseat':
-            pass
+            contestant.unseat_contestant(config.args.id)
+        if subaction == 'unseatall':
+            contestant.unseat_all_contestant()
         if subaction == 'genpass':
             if config.args.id != -1:
                 contestant.generate_password(config.args.id, config.args.pwd_alphabet, config.args.pwd_length,
                                              config.args.override)
             else:
                 contestant.generate_password_for_all(config.args.pwd_alphabet, config.args.pwd_length, config.args.override)
+        return
+
+    if action == 'seat':
+        subaction = config.args.subaction
+
+        if contest.contest_locked() and subaction in ['add', 'import', 'remove']:
+            error('Contest "{}" has been locked.'.format(contest.get_contest().title))
+
+        if subaction == 'add':
+            seat.create_seat_interactive()
+        if subaction == 'import':
+            seat.import_seats(config.args.file_path)
+        if subaction == 'remove':
+            seat.remove_seat(config.args.room, config.args.seat_id)
+        if subaction == 'show':
+            seat.show_seat(seat.Seat(config.args.room, config.args.seat_id))
+        if subaction == 'showroom':
+            seat.show_room(config.args.room)
+        if subaction == 'where':
+            contestant.query_team_seat(config.args.team_id)
         return
 
     print(config.args)

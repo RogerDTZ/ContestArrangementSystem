@@ -8,31 +8,38 @@ from pathlib import Path
 
 def user_abort(msg=None):
     if msg:
-        print('User abort: {}'.format(msg))
+        print('[INFO] User abort: {}'.format(msg))
+    else:
+        print('[INFO] Cancelled by user.')
     exit(0)
 
 
 def info(msg):
-    print('[Info] {}'.format(msg))
+    print('[INFO] {}'.format(msg))
+
+
+def normal(msg):
+    info(msg)
+    exit(0)
 
 
 def invalid_format(arg_name, arg_value):
-    print('Invalid format: {} is in wrong format: {}'.format(arg_name, arg_value))
+    print('[Invalid format] {} is in wrong format: {}'.format(arg_name, arg_value))
     exit(1)
 
 
 def invalid_arg(arg_name, arg_value):
-    print('Invalid argument: {} is invalid: {}'.format(arg_name, arg_value))
+    print('[Invalid argument] {} is invalid: {}'.format(arg_name, arg_value))
     exit(1)
 
 
 def error(msg):
-    print('ERROR: {}'.format(msg))
+    print('[ERROR] {}'.format(msg))
     exit(1)
 
 
 def fatal(msg):
-    print('FATAL: {}'.format(msg))
+    print('[FATAL] {}'.format(msg))
     exit(1)
 
 
@@ -71,6 +78,28 @@ def write_yaml(path: Path, data: dict):
         yaml.dump(data=data, stream=f, allow_unicode=True)
 
 
+def read_tsv(path: Path) -> list:
+    with open(path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    res = []
+    for line in lines:
+        if line.endswith('\n'):
+            line = line[:-1]
+        res.append(line.split('\t'))
+    return res
+
+
+def write_tsv(path: Path, data: list):
+    with open(path, 'w', encoding='utf-8') as f:
+        for line in data:
+            for index in range(len(line)):
+                value = line[index]
+                f.write(str(value))
+                if index < len(line) - 1:
+                    f.write('\t')
+            f.write('\n')
+
+
 def read_json(path: Path) -> dict:
     with open(path, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -99,3 +128,14 @@ def encode_range(low: int, high: int):
 def generate_random_password(alphabet, length):
     password = ''.join(secrets.choice(alphabet) for i in range(length))
     return password
+
+
+def table_line(width):
+    return '+' + ('-' * width) + '+'
+
+
+def table_row(content: str, width, left=-1):
+    if left == -1:
+        return '|' + content.center(width) + '|'
+    return '|' + content.ljust(width - 2 * left).center(width) + '|'
+

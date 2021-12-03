@@ -134,6 +134,8 @@ Contestant section:
   Raise exception if:
 
   * some contestant still belongs to the affiliation.
+  
+* `cas affiliation show [externalid]`: Show information of an affiliation or all affiliations.
 
 # Export
 

@@ -133,7 +133,27 @@ def table_line(width):
     return '+' + ('-' * width) + '+'
 
 
+def is_chinese_character(c):
+    return '\u4e00' <= c <= '\u9fff'
+
+
+def chinese_placeholder_encode(s):
+    res = str()
+    for i in range(len(s)):
+        res += s[i]
+        if is_chinese_character(s[i]):
+            res += '$'
+    return res
+
+
+def chinese_placeholder_decode(s):
+    return ''.join([c for i, c in enumerate(list(s)) if c != '$'])
+
+
 def table_row(content: str, width, left=-1):
+    content = chinese_placeholder_encode(content)
     if left == -1:
-        return '|' + content.center(width) + '|'
-    return '|' + content.ljust(width - 2 * left).center(width) + '|'
+        res = '|' + content.center(width) + '|'
+    else:
+        res = '|' + content.ljust(width - 2 * left).center(width) + '|'
+    return chinese_placeholder_decode(res)

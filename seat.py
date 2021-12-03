@@ -76,17 +76,8 @@ def get_seats():
         return g_seat_map, g_available
     g_init = True
 
-    data = list()
     path = Path('.') / 'data' / 'seats.tsv'
-    if path.is_file():
-        data = read_tsv(path)
-    else:
-        error('{} not found.'.format(path))
-
-    for item in data:
-        room = item[0]
-        seat_id = item[1]
-        create_seat(room, seat_id)
+    import_seats(path, silent=True, write=False)
 
     return g_seat_map, g_available
 
@@ -98,18 +89,23 @@ def create_seat_interactive():
     info('Created seat [{}].'.format(s.to_string()))
 
 
-def import_seats(path: Path):
+def import_seats(path: Path, silent=False, write=True):
     if not path.is_file():
         error("File not found: {}".format(path))
-    lines = read_tsv(path)
+    data = read_tsv(path)
 
-    for item in lines:
+    for item in data:
+        if len(item) != 2:
+            invalid_format(path, item)
         room = item[0]
         seat_id = item[1]
         create_seat(room, seat_id)
 
-    write_seats_data()
-    info('Successfully imported {} seats.'.format(len(lines)))
+    if not silent:
+        info('Successfully imported {} seats.'.format(len(data)))
+
+    if write:
+        write_seats_data()
 
 
 def apply_seat(contestant_id, random_choose):
@@ -213,6 +209,8 @@ def get_room_info():
         cur += 1
         if cur != tot:
             res += ', '
+    if len(res) == 0:
+        res = 'No room'
     return res
 
 

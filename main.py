@@ -5,6 +5,7 @@ import argparse
 import string
 import signal
 
+import affiliation
 import config
 import contest
 import contestant
@@ -96,7 +97,11 @@ def build_parser():
     affiliation_subparsers.required = True
     affiliation_add = affiliation_subparsers.add_parser('add', help='Add a affiliation.')
     affiliation_import = affiliation_subparsers.add_parser('import', help='Import affiliations from a tsv file.')
+    affiliation_import.add_argument('file_path', type=Path, help='Path to the tsv file.')
     affiliation_remove = affiliation_subparsers.add_parser('remove', help='Remove a affiliation by its externalid.')
+    affiliation_remove.add_argument('externalid', type=str)
+    affiliation_show = affiliation_subparsers.add_parser('show', help='Show information of an affiliation.')
+    affiliation_show.add_argument('externalid', type=str, nargs='?', default=None, const=None, help='Externalid of the affiliation. Ignore it to print all affiliations.')
 
     export_parser = subparsers.add_parser('export', help='Export data.')
     export_subparsers = export_parser.add_subparsers(title='actions', dest='subaction', parser_class=SuppressingParser)
@@ -119,9 +124,10 @@ def run_parsed_arguments(args):
 
     # Ensure that current directory is the contest directory.
     contest.ensure_contest_directory()
-    # TODO: Load affiliation information.
     # Load the seats.
     seat.get_seats()
+    # Load the affiliations.
+    affiliation.get_affiliations()
     # Preload the contest.
     contest.get_contest()
     # Preload the contestants.
@@ -138,7 +144,7 @@ def run_parsed_arguments(args):
     if action == 'contestant':
         subaction = config.args.subaction
 
-        if contest.contest_locked() and subaction in ['add', 'import', 'remove', 'seat', 'seatall', 'unseat', 'unseatall', 'genpass']:
+        if contest.contest_locked()[0] and subaction in ['add', 'import', 'remove', 'seat', 'seatall', 'unseat', 'unseatall', 'genpass']:
             error('Contest "{}" has been locked.'.format(contest.get_contest().title))
 
         if subaction == 'add':
@@ -171,7 +177,7 @@ def run_parsed_arguments(args):
     if action == 'seat':
         subaction = config.args.subaction
 
-        if contest.contest_locked() and subaction in ['add', 'import', 'remove']:
+        if contest.contest_locked()[0] and subaction in ['add', 'import', 'remove']:
             error('Contest "{}" has been locked.'.format(contest.get_contest().title))
 
         if subaction == 'add':
@@ -186,6 +192,27 @@ def run_parsed_arguments(args):
             seat.show_room(config.args.room)
         if subaction == 'where':
             contestant.query_team_seat(config.args.team_id)
+
+        return
+
+    if action == 'affiliation':
+        subaction = config.args.subaction
+
+        if contest.contest_locked()[0] and subaction in ['add', 'import', 'remove']:
+            error('Contest "{}" has been locked.'.format(contest.get_contest().title))
+
+        if subaction == 'add':
+            affiliation.create_affiliation_interactive()
+        if subaction == 'import':
+            affiliation.import_affiliations(config.args.file_path)
+        if subaction == 'remove':
+            affiliation.remove_affiliation(config.args.externalid)
+        if subaction == 'show':
+            if config.args.externalid:
+                affiliation.show_affiliation(config.args.externalid)
+            else:
+                affiliation.show_all_affiliations()
+
         return
 
     print(config.args)

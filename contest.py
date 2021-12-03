@@ -1,6 +1,8 @@
 from util import *
+import affiliation
 import contestant
 import seat
+from colorama import Fore
 
 
 class Contest:
@@ -10,7 +12,6 @@ class Contest:
     team_id_range: tuple
     lock: bool
     teamid_pool: set
-    capacity: int
 
     def __init__(self, path, title, team_category_id, team_id_range, lock):
         self.path = path
@@ -18,7 +19,6 @@ class Contest:
         self.team_category_id = team_category_id
         self.team_id_range = team_id_range
         self.teamid_pool = set(range(self.team_id_range[0], self.team_id_range[1] + 1))
-        self.capacity = min(len(self.teamid_pool), seat.get_seats_num())
         self.lock = lock
 
     def write(self):
@@ -34,7 +34,10 @@ class Contest:
         self.write()
 
     def locked(self):
-        return self.lock
+        return self.lock, (Fore.GREEN + '[Locked]' if self.lock else Fore.YELLOW + '[Unlocked]') + Fore.RESET
+
+    def get_capacity(self):
+        return min(self.team_id_range[1] - self.team_id_range[0] + 1, seat.get_seats_num())
 
     def get_available_teamid(self):
         if len(self.teamid_pool) == 0:
@@ -57,22 +60,29 @@ class Contest:
     def print(self):
         print("""
  title:               {}
- lock state:          [{}]
+ lock state:          {}
  team_category id:    {}
  team_id range:       {}
+ affiliation:         {}
  room:                {}
  available seats:     {}
  capacity:            {}
+ seat state:          {}
+ password state:      {}
+ contest state:       {}
         """.format(
             self.title,
-            'locked' if self.lock else 'unlocked',
+            self.locked()[1],
             self.team_category_id,
             '{} ~ {}'.format(self.team_id_range[0], self.team_id_range[1]),
+            affiliation.get_affiliations_num(),
             seat.get_room_info(),
             seat.get_seats_num(),
-            '{} / {}'.format(contestant.get_contestants_num(), self.capacity),
+            '[{} / {}]'.format(contestant.get_contestants_num(), self.get_capacity()),
+            contestant.get_contestant_seat_state()[1],
+            contestant.get_contestant_password_state()[1],
+            get_ready_state()[1]
         ))
-        # TODO: add affiliation information
 
 
 g_contest = None
@@ -114,9 +124,25 @@ def create_contest():
     team_category_id = int(ask_variable('team category id'))
     team_id_range = decode_range(ask_variable('team id range').strip(), 'team_id_range')
 
-    path = Path('.') / dirname
+    root_path = Path('.') / dirname
+    root_path.mkdir()
+    path = root_path / 'data'
     path.mkdir()
-    contest = Contest(path, title, team_category_id, team_id_range, False)
+
+    path = (root_path / 'data' / 'contestants.json')
+    if not path.is_file():
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write('[]\n')
+    path = (root_path / 'data' / 'seats.tsv')
+    if not path.is_file():
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write('')
+    path = (root_path / 'data' / 'affiliations.tsv')
+    if not path.is_file():
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write('')
+
+    contest = Contest(root_path, title, team_category_id, team_id_range, False)
     contest.write()
 
 
@@ -137,11 +163,11 @@ def contest_locked():
 
 
 def get_capacity():
-    return get_contest().capacity
+    return get_contest().get_capacity()
 
 
 def contest_full():
-    return contestant.get_contestants_num() == get_contest().capacity
+    return contestant.get_contestants_num() == get_contest().get_capacity()
 
 
 def occupy_teamid(team_id):
@@ -154,3 +180,22 @@ def release_teamid(team_id):
 
 def get_available_teamid():
     return get_contest().get_available_teamid()
+
+
+def get_ready_state():
+    ready = Fore.GREEN + '[Ready]' + Fore.RESET
+    not_ready = Fore.RED + '[Not Ready]' + Fore.RESET
+    flag = True
+    problem = list()
+    if not contestant.get_contestant_seat_state()[0]:
+        flag = False
+        problem.append('seat')
+    if not contestant.get_contestant_password_state()[0]:
+        flag = False
+        problem.append('password')
+    if not contest_locked()[0]:
+        flag = False
+        problem.append('lock')
+    return flag, ready if flag else not_ready + ' ' + ', '.join(problem)
+
+

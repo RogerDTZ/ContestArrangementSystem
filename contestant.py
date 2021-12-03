@@ -1,7 +1,9 @@
+import affiliation
 from util import *
 import config
 import contest
 import seat
+from colorama import Fore
 
 
 team_id2id = dict()
@@ -12,17 +14,17 @@ class Contestant:
     team_id: int
     name: str
     sid: str
-    affiliation: str
+    aff: str
     seat_formatted_str: str
     password: str
 
-    def __init__(self, contestant_id, team_id, name, sid, affiliation, seat_formatted_str=None, password=None):
+    def __init__(self, contestant_id, team_id, name, sid, aff, seat_formatted_str=None, password=None):
         self.id = contestant_id
         self.team_id = team_id
         team_id2id[self.team_id] = self.id
         self.name = name
         self.sid = sid
-        self.affiliation = affiliation
+        self.aff = aff
         self.seat_formatted_str = seat_formatted_str
         self.password = password
 
@@ -38,7 +40,7 @@ class Contestant:
             'team_id': self.team_id,
             'name': self.name,
             'sid': self.sid,
-            'affiliation': self.affiliation,
+            'affiliation': self.aff,
             'seat': self.seat_formatted_str,
             'password': self.password
         }
@@ -55,7 +57,7 @@ class Contestant:
         print(table_row('team_id:        {}'.format(self.team_id), width=width, left=left))
         print(table_row('name:           {}'.format(self.name), width=width, left=left))
         print(table_row('sid:            {}'.format(self.sid if self.sid and len(self.sid) > 0 else '[None]'), width=width, left=left))
-        print(table_row('affiliation:    {}'.format(self.affiliation), width=width, left=left))
+        print(table_row('affiliation:    {}'.format(self.aff), width=width, left=left))
         print(table_row('location:       {}'.format(self.seat_formatted_str if self.seat_formatted_str else '[Unseated]'), width=width, left=left))
         print(table_row('password:       {}'.format(self.password if print_password else ('[Generated]' if self.password else 'None')), width=width, left=left))
 
@@ -68,19 +70,20 @@ g_contestant_unique = set()
 g_contestant_max_id = 0
 
 
-def create_contestant(contestant_id, team_id, name, sid, affiliation, seat_formatted_str=None, password=None):
+def create_contestant(contestant_id, team_id, name, sid, aff, seat_formatted_str=None, password=None):
     global g_init, g_contestants, g_contestant_unique, g_contestant_max_id
 
-    if (name, sid, affiliation) in g_contestant_unique:
-        error('Duplicate contestant: name={} sid={} affiliation={}'.format(name, sid, affiliation))
-    # TODO: Verify that affiliation exists.
+    if (name, sid, aff) in g_contestant_unique:
+        error('Duplicate contestant: name={} sid={} affiliation={}'.format(name, sid, aff))
+    if aff not in affiliation.get_affiliations():
+        error('Affiliation {} not found.'.format(aff))
     if seat_formatted_str is not None:
         seat.occupy_seat(contestant_id, seat.decode_seat(seat_formatted_str))
     if not contest.occupy_teamid(team_id):
         error('Team id {} is not available (duplicate or out of range).'.format(team_id))
 
-    g_contestants[contestant_id] = Contestant(contestant_id, team_id, name, sid, affiliation, seat_formatted_str, password)
-    g_contestant_unique.add((name, sid, affiliation))
+    g_contestants[contestant_id] = Contestant(contestant_id, team_id, name, sid, aff, seat_formatted_str, password)
+    g_contestant_unique.add((name, sid, aff))
     g_contestant_max_id = max(g_contestant_max_id, contestant_id)
 
 
@@ -103,11 +106,11 @@ def get_contestants():
         team_id = int(item['team_id'])
         name = item['name']
         sid = item['sid'] if 'sid' in item and item['sid'] else ''
-        affiliation = item['affiliation']
+        aff = item['affiliation']
         seat_formatted_str = item['seat'] if 'seat' in item else None
         password = item['password'] if 'password' in item else None
 
-        create_contestant(contestant_id, team_id, name, sid, affiliation, seat_formatted_str, password)
+        create_contestant(contestant_id, team_id, name, sid, aff, seat_formatted_str, password)
 
     return g_contestants
 
@@ -156,13 +159,13 @@ def create_contestant_interactive():
         error('The contest is full. Check available team ids and available seats.')
     name = ask_variable('name')
     sid = ask_variable('SID', '')
-    affiliation = ask_variable('affiliation')
+    aff = ask_variable('affiliation')
     require_seat = ask_confirm('Seat the contestant?', True)
     gen_pass = ask_confirm('Generate a password?', True)
     contestant_id = get_available_id()
     team_id = contest.get_available_teamid()
 
-    create_contestant(contestant_id, team_id, name, sid, affiliation)
+    create_contestant(contestant_id, team_id, name, sid, aff)
     if require_seat:
         seat_contestant(contestant_id, manual=False, random_apply=False, override=False)
     if gen_pass:
@@ -177,17 +180,17 @@ def import_contestant(path: Path):
         error("File not found: {}".format(path))
     lines = read_tsv(path)
     if get_contestants_num() + len(lines) > contest.get_capacity():
-        error("Importing contestants are beyond the capacity of contest.")
+        error("These contestants are beyond the capacity of contest.")
 
     for para in lines:
         if len(para) != 3:
             invalid_format('contestant csv', para.join('\t'))
         name = para[0]
         sid = para[1]
-        affiliation = para[2]
+        aff = para[2]
         contestant_id = get_available_id()
         team_id = contest.get_available_teamid()
-        create_contestant(contestant_id, team_id, name, sid, affiliation)
+        create_contestant(contestant_id, team_id, name, sid, aff)
 
     write_contestant_data()
     info('Successfully imported {} contestants.'.format(len(lines)))
@@ -203,7 +206,7 @@ def remove_contestant(contestant_id):
     contest.release_teamid(contestant.team_id)
     if contestant.seated():
         unseat_contestant(contestant_id, silent=True)
-    g_contestant_unique.remove((contestant.name, contestant.sid, contestant.affiliation))
+    g_contestant_unique.remove((contestant.name, contestant.sid, contestant.aff))
     g_contestants.pop(contestant_id)
 
     write_contestant_data()
@@ -327,3 +330,25 @@ def query_team_seat(team_id):
         error('Team {} does not exists.'.format(team_id))
     c = get_contestants()[team_id2id[team_id]]
     print('[{}]'.format(c.seat_formatted_str))
+
+
+def get_contestant_seat_state():
+    tot = 0
+    seated = 0
+    for contestant_id, contestant in get_contestants().items():
+        tot += 1
+        if contestant.seated():
+            seated += 1
+    return seated == tot, (Fore.GREEN if seated == tot else Fore.YELLOW) + '[{} / {}]'.format(seated, tot) + Fore.RESET
+
+
+def get_contestant_password_state():
+    tot = 0
+    has = 0
+    for contestant_id, contestant in get_contestants().items():
+        tot += 1
+        if contestant.password is not None:
+            has += 1
+    return has == tot, (Fore.GREEN if has == tot else Fore.YELLOW) + '[{} / {}]'.format(has, tot) + Fore.RESET
+
+

@@ -347,7 +347,10 @@ def query_team_seat(team_id):
     if team_id not in team_id2id:
         error('Team {} does not exists.'.format(team_id))
     c = get_contestants()[team_id2id[team_id]]
-    print('[{}]'.format(c.seat_formatted_str))
+    if c.seat_formatted_str:
+        print('[{}] {}'.format(c.seat_formatted_str, c.name))
+    else:
+        print('[Unseated] {}'.format(c.name))
 
 
 def get_contestant_seat_state():

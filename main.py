@@ -69,7 +69,7 @@ def build_parser():
                                     help='ID of the contestant to ' 'generate password.')
     contestant_genpass.add_argument('--override', '-o', action='store_true', default=False, help='Override the existing password.')
     contestant_genpass.add_argument('--pwd-alphabet', type=str,
-                                    default=string.ascii_lowercase + string.digits,
+                                    default=string.ascii_uppercase + string.digits,
                                     help='Alphabet of the password.')
     contestant_genpass.add_argument('--pwd-length', type=int, default=8, help='Length of the password.')
 

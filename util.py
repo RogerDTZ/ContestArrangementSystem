@@ -19,6 +19,10 @@ def info(msg):
     print('{}[INFO]{} {}'.format(Fore.BLUE, Fore.RESET, msg))
 
 
+def warning(msg):
+    print('{}[WARNING]{} {}'.format(Fore.YELLOW, Fore.RESET, msg))
+
+
 def normal(msg):
     info(msg)
     exit(0)

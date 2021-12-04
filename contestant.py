@@ -92,6 +92,13 @@ def create_contestant(contestant_id, team_id, name, sid, aff, seat_formatted_str
     g_contestant_unique.add((name, sid, aff))
     g_contestant_max_id = max(g_contestant_max_id, contestant_id)
 
+    for _, c in g_contestants.items():
+        if c.id == contestant_id:
+            continue
+        similar = c.aff == aff and (c.name == name or c.sid == sid)
+        if similar:
+            warning('Contestant {} and {} have similar section.'.format(contestant_id, c.id))
+
 
 def get_contestants():
     global g_init, g_contestants, g_contestant_unique, g_contestant_max_id
@@ -173,7 +180,7 @@ def create_contestant_interactive():
 
     create_contestant(contestant_id, team_id, name, sid, aff)
     if require_seat:
-        seat_contestant(contestant_id, manual=False, random_apply=False, override=False)
+        seat_contestant(contestant_id, manual=False, random_apply=False, override=False, write=False)
     if gen_pass:
         generate_password(contestant_id, config.args.pwd_alphabet, config.args.pwd_length)
 
@@ -207,6 +214,10 @@ def remove_contestant(contestant_id):
     if contestant_id not in contestants:
         error('Contestant {} not found.'.format(contestant_id))
     contestant = contestants[contestant_id]
+
+    contestant.print()
+    if not ask_confirm('Are you sure to delete this contestant?', False):
+        user_abort()
 
     global g_contestants, g_contestant_unique
     contest.release_teamid(contestant.team_id)
@@ -244,7 +255,7 @@ def generate_password_for_all(alphabet, length, override=False):
     info('Successfully generate password for {} contestant(s).'.format(len(contestants)))
 
 
-def seat_contestant(contestant_id, manual, random_apply, override, silent=False):
+def seat_contestant(contestant_id, manual, random_apply, override, silent=False, write=True):
     contestants = get_contestants()
 
     if contestant_id not in contestants:
@@ -268,7 +279,8 @@ def seat_contestant(contestant_id, manual, random_apply, override, silent=False)
 
     if not silent:
         info('Contestant {} is seated to [{}].'.format(contestant_id, s.to_string()))
-    write_contestant_data()
+    if write:
+        write_contestant_data()
 
 
 def seat_all_contestants(random_apply, silent=False):

@@ -141,6 +141,8 @@ Contestant section:
 
 * `cas export dj`: Generate `accounts.tsv` and `teams.json`
 
+  Please manually create corresponding affiliation / organization on the DOMJudge. You may need to manually set `externalid` in the database.
+
   Raise exception if:
 
   * some contestant is not seated

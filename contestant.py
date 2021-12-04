@@ -34,6 +34,12 @@ class Contestant:
     def get_seat(self):
         return seat.decode_seat(self.seat_formatted_str)
 
+    def get_account(self):
+        return contest.get_contest().account_prefix + str(self.team_id)
+
+    def get_affiliation_fullname(self):
+        return affiliation.get_affiliations()[self.aff]
+
     def serialize(self):
         return {
             'id': self.id,
@@ -216,7 +222,7 @@ def remove_contestant(contestant_id):
 def generate_password(contestant_id, alphabet, length, override=False):
     contestant = get_contestants()[contestant_id]
     if contestant.password and not override:
-        error('Contestant {} has already have a password.'.format(contestant_id))
+        error('Contestant {} has already have a password. Use -o to override.'.format(contestant_id))
     contestant.password = generate_random_password(alphabet, length)
 
     write_contestant_data()
@@ -231,7 +237,7 @@ def generate_password_for_all(alphabet, length, override=False):
     for contestant_id in contestants:
         contestant = contestants[contestant_id]
         if contestant.password and not override:
-            error('Contestant {} has already have a password.'.format(contestant_id))
+            error('Contestant {} has already have a password. Use -o to override.'.format(contestant_id))
         contestant.password = generate_random_password(alphabet, length)
 
     write_contestant_data()

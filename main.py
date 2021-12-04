@@ -9,6 +9,7 @@ import affiliation
 import config
 import contest
 import contestant
+import export
 import seat
 from util import *
 
@@ -106,8 +107,9 @@ def build_parser():
     export_parser = subparsers.add_parser('export', help='Export data.')
     export_subparsers = export_parser.add_subparsers(title='actions', dest='subaction', parser_class=SuppressingParser)
     export_subparsers.required = True
+    export_all = export_subparsers.add_parser('all', help='Export all data.')
     export_domjudge = export_subparsers.add_parser('domjudge', help='Export accounts.tsv and teams.json for DOMJudge.')
-    export_contestants = export_subparsers.add_parser('contestants', help='Export contestant information.')
+    export_contestants = export_subparsers.add_parser('contestant', help='Export contestant information.')
 
     return parser
 
@@ -215,7 +217,21 @@ def run_parsed_arguments(args):
 
         return
 
-    print(config.args)
+    if action == 'export':
+        if not contest.get_ready_state()[0]:
+            error('Contest "{}" is not ready yet.'.format(contest.get_contest().title))
+
+        subaction = config.args.subaction
+
+        if subaction == 'all':
+            export.export_domjudge()
+            export.export_contestant_table()
+        if subaction == 'domjudge':
+            export.export_domjudge()
+        if subaction == 'contestant':
+            export.export_contestant_table()
+
+        return
 
 
 def main():

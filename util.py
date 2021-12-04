@@ -4,18 +4,19 @@ import yaml
 import json
 import secrets
 from pathlib import Path
+from colorama import Fore
 
 
 def user_abort(msg=None):
     if msg:
-        print('[INFO] User abort: {}'.format(msg))
+        print('{}[INFO]{} User abort: {}'.format(Fore.BLUE, Fore.RESET, msg))
     else:
-        print('[INFO] Cancelled by user.')
+        print('{}[INFO]{} Cancelled by user.'.format(Fore.BLUE, Fore.RESET))
     exit(0)
 
 
 def info(msg):
-    print('[INFO] {}'.format(msg))
+    print('{}[INFO]{} {}'.format(Fore.BLUE, Fore.RESET, msg))
 
 
 def normal(msg):
@@ -24,22 +25,22 @@ def normal(msg):
 
 
 def invalid_format(arg_name, arg_value):
-    print('[Invalid format] {} is in wrong format: {}'.format(arg_name, arg_value))
+    print('{}[Invalid format]{} {} is in wrong format: {}'.format(Fore.RED, Fore.RESET, arg_name, arg_value))
     exit(1)
 
 
 def invalid_arg(arg_name, arg_value):
-    print('[Invalid argument] {} is invalid: {}'.format(arg_name, arg_value))
+    print('{}[Invalid argument]{} {} is invalid: {}'.format(Fore.RED, Fore.RESET, arg_name, arg_value))
     exit(1)
 
 
 def error(msg):
-    print('[ERROR] {}'.format(msg))
+    print('{}[ERROR]{} {}'.format(Fore.RED, Fore.RESET, msg))
     exit(1)
 
 
 def fatal(msg):
-    print('[FATAL] {}'.format(msg))
+    print('{}[FATAL]{} {}'.format(Fore.RED, Fore.RESET, msg))
     exit(1)
 
 

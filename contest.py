@@ -10,15 +10,17 @@ class Contest:
     title: str
     team_category_id: int
     team_id_range: tuple
+    account_prefix: str
     lock: bool
     teamid_pool: set
 
-    def __init__(self, path, title, team_category_id, team_id_range, lock):
+    def __init__(self, path, title, team_category_id, team_id_range, account_prefix, lock):
         self.path = path
         self.title = title
         self.team_category_id = team_category_id
         self.team_id_range = team_id_range
         self.teamid_pool = set(range(self.team_id_range[0], self.team_id_range[1] + 1))
+        self.account_prefix = account_prefix
         self.lock = lock
 
     def write(self):
@@ -26,7 +28,8 @@ class Contest:
             'title': self.title,
             'team_category_id': self.team_category_id,
             'team_id_range': '{}-{}'.format(self.team_id_range[0], self.team_id_range[1]),
-            'lock': self.lock
+            'account_prefix': self.account_prefix,
+            'lock': self.lock,
         })
 
     def toggle_lock(self, lock: bool):
@@ -63,6 +66,7 @@ class Contest:
  lock state:          {}
  team_category id:    {}
  team_id range:       {}
+ account_prefix:      {}
  affiliation:         {}
  room:                {}
  available seats:     {}
@@ -75,6 +79,7 @@ class Contest:
             self.locked()[1],
             self.team_category_id,
             '{} ~ {}'.format(self.team_id_range[0], self.team_id_range[1]),
+            self.account_prefix,
             affiliation.get_affiliations_num(),
             seat.get_room_info(),
             seat.get_seats_num(),
@@ -107,11 +112,12 @@ def get_contest():
     ensure_contest_directory(path)
     data = read_yaml(path / 'contest.yaml')
     g_contest = Contest(
-        path,
-        data['title'],
-        int(data['team_category_id']),
-        decode_range(data['team_id_range'], 'team_id_rage'),
-        bool(data['lock'])
+        path=path,
+        title=data['title'],
+        team_category_id=int(data['team_category_id']),
+        team_id_range=decode_range(data['team_id_range'], 'team_id_rage'),
+        account_prefix=data['account_prefix'],
+        lock=bool(data['lock'])
     )
     return g_contest
 
@@ -123,6 +129,7 @@ def create_contest():
         error('directory {} exists.'.format(dirname))
     team_category_id = int(ask_variable('team category id'))
     team_id_range = decode_range(ask_variable('team id range').strip(), 'team_id_range')
+    account_prefix = ask_variable('account prefix').strip().replace(' ', '_')
 
     root_path = Path('.') / dirname
     root_path.mkdir()
@@ -142,7 +149,7 @@ def create_contest():
         with open(path, 'w', encoding='utf-8') as f:
             f.write('')
 
-    contest = Contest(root_path, title, team_category_id, team_id_range, False)
+    contest = Contest(path=root_path, title=title, team_category_id=team_category_id, team_id_range=team_id_range, account_prefix=account_prefix, lock=False)
     contest.write()
 
 
@@ -196,6 +203,6 @@ def get_ready_state():
     if not contest_locked()[0]:
         flag = False
         problem.append('lock')
-    return flag, ready if flag else not_ready + ' ' + ', '.join(problem)
+    return flag, ready if flag else not_ready + ' (issue: ' + ', '.join(problem) + ')'
 
 

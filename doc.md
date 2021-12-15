@@ -139,7 +139,7 @@ Contestant section:
 
 # Export
 
-* `cas export dj`: Generate `accounts.tsv` and `teams.json`
+* `cas export domjudge [contestant_id]`: Generate `accounts.tsv` and `teams.json` for all contestants or a specific contestant.
 
   Please manually create corresponding affiliation / organization on the DOMJudge. You may need to manually set `externalid` in the database.
 
@@ -156,3 +156,4 @@ Contestant section:
 
   The export time should be included in the filename and the headline.
 
+* `cas export all`: Export all.

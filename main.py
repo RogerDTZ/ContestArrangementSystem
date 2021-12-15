@@ -109,6 +109,7 @@ def build_parser():
     export_subparsers.required = True
     export_all = export_subparsers.add_parser('all', help='Export all data.')
     export_domjudge = export_subparsers.add_parser('domjudge', help='Export accounts.tsv and teams.json for DOMJudge.')
+    export_domjudge.add_argument('contestant_id', type=int, nargs='?', default=-1, const=-1, help='ID of the contestant to export. Ignore it to export all contestants.')
     export_contestants = export_subparsers.add_parser('contestant', help='Export contestant information.')
 
     return parser
@@ -227,7 +228,7 @@ def run_parsed_arguments(args):
             export.export_domjudge()
             export.export_contestant_table()
         if subaction == 'domjudge':
-            export.export_domjudge()
+            export.export_domjudge(config.args.contestant_id)
         if subaction == 'contestant':
             export.export_contestant_table()
 

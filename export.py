@@ -9,12 +9,33 @@ import seat
 import affiliation
 
 
+def export_domjudge_account(path, cid):
+    data = list()
+    data.append(['accounts', '1'])
+    c = contestant.get_contestants()[cid]
+    data.append(['team', c.name, c.get_account(), c.password])
+    write_tsv(path, data)
+
+
 def export_domjudge_accounts(path):
     data = list()
     data.append(['accounts', '1'])
     for _, c in contestant.get_contestants().items():
         data.append(['team', c.name, c.get_account(), c.password])
     write_tsv(path, data)
+
+
+def export_domjudge_team(path, cid):
+    data = list()
+    c = contestant.get_contestants()[cid]
+    item = dict()
+    item['id'] = str(c.team_id)
+    item['name'] = c.name
+    item['room'] = c.seat_formatted_str
+    item['organization_id'] = c.aff
+    item['group_ids'] = [str(contest.get_contest().team_category_id)]
+    data.append(item)
+    write_json(path, data)
 
 
 def export_domjudge_teams(path):
@@ -30,25 +51,42 @@ def export_domjudge_teams(path):
     write_json(path, data)
 
 
-def export_domjudge():
+def export_domjudge(contestant_id=-1):
     (Path('.') / 'export').mkdir(exist_ok=True)
     (Path('.') / 'export' / 'domjudge').mkdir(exist_ok=True)
-    (Path('.') / 'export' / 'domjudge' / 'history').mkdir(exist_ok=True)
 
-    cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-    root_path = Path('.') / 'export' / 'domjudge' / 'history' / cur_time
-    root_path.mkdir()
+    if contestant_id == -1:
+        (Path('.') / 'export' / 'domjudge' / 'history').mkdir(exist_ok=True)
 
-    export_domjudge_accounts(root_path / 'accounts.tsv')
-    export_domjudge_teams(root_path / 'teams.json')
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        root_path = Path('.') / 'export' / 'domjudge' / 'history' / cur_time
+        root_path.mkdir()
 
-    normal_path = Path('.') / 'export' / 'domjudge'
-    os.system("cp {} {}".format(root_path / 'accounts.tsv', normal_path / 'accounts.tsv'))
-    os.system("cp {} {}".format(root_path / 'teams.json', normal_path / 'teams.json'))
-    with open(normal_path / 'timestamp.txt', 'w', encoding='utf-8') as f:
-        f.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+        export_domjudge_accounts(root_path / 'accounts.tsv')
+        export_domjudge_teams(root_path / 'teams.json')
 
-    info('Successfully export DOMJudge data.')
+        normal_path = Path('.') / 'export' / 'domjudge'
+        os.system("cp {} {}".format(root_path / 'accounts.tsv', normal_path / 'accounts.tsv'))
+        os.system("cp {} {}".format(root_path / 'teams.json', normal_path / 'teams.json'))
+        with open(normal_path / 'timestamp.txt', 'w', encoding='utf-8') as f:
+            f.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+
+        info('Successfully export DOMJudge data.')
+    else:
+        root_path = Path('.') / 'export' / 'domjudge' / 'personal'
+        root_path.mkdir(exist_ok=True)
+
+        contestants = contestant.get_contestants()
+        if contestant_id not in contestants:
+            error('Contestant {} not found'.format(contestant_id))
+        c = contestants[contestant_id]
+
+        filename = '{}-{}-{}-{}'.format(str(c.id), c.aff, c.name, c.get_account())
+        export_domjudge_account(root_path / (filename + '.tsv'), c.id)
+        export_domjudge_team(root_path / (filename + '.json'), c.id)
+
+        info("Successfully export DOMJudge data for contestant {}.".format(c.id))
+
 
 
 def export_contestants(path, print_account_password):

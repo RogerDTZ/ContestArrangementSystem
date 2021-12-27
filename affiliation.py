@@ -82,7 +82,7 @@ def show_affiliation(externalid, cnt=-1, no_header=False):
     affiliations = get_affiliations()
     if externalid not in affiliations:
         error('Affiliation {} not found.'.format(externalid))
-    width = 50
+    width = 60
     left = 10
     if cnt == -1:
         cnt = len([x for _, x in contestant.get_contestants().items() if x.aff == externalid])

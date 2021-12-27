@@ -95,7 +95,7 @@ def create_contestant(contestant_id, team_id, name, sid, aff, seat_formatted_str
     for _, c in g_contestants.items():
         if c.id == contestant_id:
             continue
-        similar = c.aff == aff and (c.name == name or c.sid == sid)
+        similar = c.aff == aff and (c.name == name or (c.sid and c.sid == sid))
         if similar:
             warning('Contestant {} and {} have similar section.'.format(contestant_id, c.id))
 

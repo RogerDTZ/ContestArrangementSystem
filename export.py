@@ -131,7 +131,7 @@ def export_contestants(path, print_account_password):
         aff_dict[aff].append(data)
 
     for room, data in room_dict.items():
-        room_ws = workbook.add_worksheet(room)
+        room_ws = workbook.add_worksheet(room[:30])  # sheet name should not exceed 30
         room_ws.activate()
         room_ws.write_row('A1', header, center_format)
         row_number = 2
@@ -141,7 +141,7 @@ def export_contestants(path, print_account_password):
             room_ws.write_row(row, c, center_format)
 
     for aff, data in aff_dict.items():
-        aff_ws = workbook.add_worksheet(affiliation.get_affiliations()[aff])
+        aff_ws = workbook.add_worksheet(affiliation.get_affiliations()[aff][:30])  # sheet name should not exceed 30
         aff_ws.activate()
         aff_ws.write_row('A1', header, center_format)
         row_number = 2

@@ -25,7 +25,7 @@ Contestant section:
 * `id`: unique ID
 * `name`: name
 * `sid`: student id (optional)
-* `affiliation`: `externalid` of team_affiliation
+* `affiliation`: `shortname` of team_affiliation
 * `teamid`: team id
 * `seat`: seat info
 * `password`: (optional, required when exporting)
@@ -36,7 +36,7 @@ Contestant section:
 
   * `name`: Name of the contestant.
   * `sid`: Student ID (optional, required for school contestants).
-  * `affiliation`: `externalid` of team_affiliation, which must exist in the database.
+  * `affiliation`: `shortname` of team_affiliation, which must exist in the database.
   * `map a seat`: Whether or not to map a seat for this contestant.
   * `generate password`: Generate password for this contestant.
 
@@ -116,39 +116,39 @@ Contestant section:
 
 # Affiliation Management
 
-* `cas affiliation import organizations.tsv`: 
+* `cas affiliation import organizations.tsv`:
 
-  The `tsv` file should include multiple lines. The format of each line is `organization_fullname\texternalid`. For example: `sustech	Southern University of Science and Technology`.
+  The `tsv` file should include multiple lines. The format of each line is `shortname\organization_fullname`. For example: `sustech	Southern University of Science and Technology`.
 
 * `cas affiliation add`: Add a organization.
 
-  * `fullname`: Full name.
-  * `externalid`: `externalid` of the organization. **Must be identical to the field in the database!**
+  * `fullname`: Full name. Please note that it should not exceed 31 characters, otherwise xlsx writer will complain when it uses the lengthy string as sheet name.
+  * `shortname`: `shortname` of the organization. **Must be identical to the field in the database!**
 
   Raise exception if:
 
   * the new affiliation conflicts with an existing affiliation.
 
-* `cas affiliation remove externalid`: Remove the affiliation.
+* `cas affiliation remove shortname`: Remove the affiliation.
 
   Raise exception if:
 
   * some contestant still belongs to the affiliation.
-  
-* `cas affiliation show [externalid]`: Show information of an affiliation or all affiliations.
+
+* `cas affiliation show [shortname]`: Show information of an affiliation or all affiliations.
 
 # Export
 
 * `cas export domjudge [contestant_id]`: Generate `accounts.tsv` and `teams.json` for all contestants or a specific contestant.
 
-  Please manually create corresponding affiliation / organization on the DOMJudge. You may need to manually set `externalid` in the database.
+  Please manually create corresponding affiliation / organization on the DOMJudge.
 
   Raise exception if:
 
   * some contestant is not seated
   * some contestant does not have a password yet
 
-* `cas export contestants [room]`: Export an excel file that contains the basic information (name, sid, organization, teamid, seat) and corresponding seat of all contestants or contestants in a certain room.
+* `cas export contestant [room]`: Export an excel file that contains the basic information (name, sid, organization, teamid, seat) and corresponding seat of all contestants or contestants in a certain room.
 
   Raise exception if:
 

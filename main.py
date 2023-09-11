@@ -99,10 +99,10 @@ def build_parser():
     affiliation_add = affiliation_subparsers.add_parser('add', help='Add a affiliation.')
     affiliation_import = affiliation_subparsers.add_parser('import', help='Import affiliations from a tsv file.')
     affiliation_import.add_argument('file_path', type=Path, help='Path to the tsv file.')
-    affiliation_remove = affiliation_subparsers.add_parser('remove', help='Remove a affiliation by its externalid.')
-    affiliation_remove.add_argument('externalid', type=str)
+    affiliation_remove = affiliation_subparsers.add_parser('remove', help='Remove a affiliation by its shortname.')
+    affiliation_remove.add_argument('shortname', type=str)
     affiliation_show = affiliation_subparsers.add_parser('show', help='Show information of an affiliation.')
-    affiliation_show.add_argument('externalid', type=str, nargs='?', default=None, const=None, help='Externalid of the affiliation. Ignore it to print all affiliations.')
+    affiliation_show.add_argument('shortname', type=str, nargs='?', default=None, const=None, help='Shortname of the affiliation. Ignore it to print all affiliations.')
 
     export_parser = subparsers.add_parser('export', help='Export data.')
     export_subparsers = export_parser.add_subparsers(title='actions', dest='subaction', parser_class=SuppressingParser)
@@ -209,10 +209,10 @@ def run_parsed_arguments(args):
         if subaction == 'import':
             affiliation.import_affiliations(config.args.file_path)
         if subaction == 'remove':
-            affiliation.remove_affiliation(config.args.externalid)
+            affiliation.remove_affiliation(config.args.shortname)
         if subaction == 'show':
-            if config.args.externalid:
-                affiliation.show_affiliation(config.args.externalid)
+            if config.args.shortname:
+                affiliation.show_affiliation(config.args.shortname)
             else:
                 affiliation.show_all_affiliations()
 

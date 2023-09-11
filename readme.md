@@ -118,7 +118,7 @@ Contestant section:
 
 * `cas affiliation import organizations.tsv`: 
 
-  The `tsv` file should include multiple lines. The format of each line is `organization_fullname\texternalid`. For example: `Southern University of Science and Technology	sustech`.
+  The `tsv` file should include multiple lines. The format of each line is `organization_fullname\texternalid`. For example: `sustech	Southern University of Science and Technology`.
 
 * `cas affiliation add`: Add a organization.
 

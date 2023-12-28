@@ -108,15 +108,27 @@ def import_seats(path: Path, silent=False, write=True):
         write_seats_data()
 
 
-def apply_seat(contestant_id, random_choose):
+def apply_seat(contestant_id, random_choose, room_mask):
     seat_map, available = get_seats()
-    if len(available) == 0:
+    use_mask = room_mask is not None and len(room_mask) > 0
+    if use_mask:
+        filtered_avai_seats = set([seat for seat in available if seat[0] in room_mask])
+    if (not use_mask and len(available) == 0) or (use_mask and len(filtered_avai_seats) == 0):
         error('No available seats.')
     if random_choose:
-        seat = available.pop()
+        if not use_mask:
+            seat = available.pop()
+        else:
+            seat = filtered_avai_seats.pop()
+            available.remove(seat)
     else:
-        seat = min(available)
-        available.remove(seat)
+        if not use_mask:
+            seat = min(available)
+            available.remove(seat)
+        else:
+            seat = min(filtered_avai_seats)
+            filtered_avai_seats.remove(seat)
+            available.remove(seat)
     seat_map[seat] = contestant_id
     return Seat(seat[0], seat[1])
 

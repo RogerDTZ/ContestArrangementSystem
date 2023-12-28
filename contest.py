@@ -8,16 +8,16 @@ from colorama import Fore
 class Contest:
     path: Path
     title: str
-    team_category_id: int
+    team_category_ids: list[int]
     team_id_range: tuple
     account_prefix: str
     lock: bool
     teamid_pool: set
 
-    def __init__(self, path, title, team_category_id, team_id_range, account_prefix, lock):
+    def __init__(self, path, title, team_category_ids, team_id_range, account_prefix, lock):
         self.path = path
         self.title = title
-        self.team_category_id = team_category_id
+        self.team_category_ids = team_category_ids
         self.team_id_range = team_id_range
         self.teamid_pool = set(range(self.team_id_range[0], self.team_id_range[1] + 1))
         self.account_prefix = account_prefix
@@ -26,7 +26,7 @@ class Contest:
     def write(self):
         write_yaml(self.path / 'contest.yaml', {
             'title': self.title,
-            'team_category_id': self.team_category_id,
+            'team_category_ids': ",".join(map(str, self.team_category_ids)),
             'team_id_range': '{}-{}'.format(self.team_id_range[0], self.team_id_range[1]),
             'account_prefix': self.account_prefix,
             'lock': self.lock,
@@ -64,7 +64,7 @@ class Contest:
         print("""
  title:               {}
  lock state:          {}
- team_category id:    {}
+ team_category ids:   {}
  team_id range:       {}
  account_prefix:      {}
  affiliation:         {}
@@ -77,7 +77,7 @@ class Contest:
         """.format(
             self.title,
             self.locked()[1],
-            self.team_category_id,
+            ", ".join(map(str, self.team_category_ids)),
             '{} ~ {}'.format(self.team_id_range[0], self.team_id_range[1]),
             self.account_prefix,
             affiliation.get_affiliations_num(),
@@ -114,7 +114,7 @@ def get_contest():
     g_contest = Contest(
         path=path,
         title=data['title'],
-        team_category_id=int(data['team_category_id']),
+        team_category_ids=list(map(int, data['team_category_ids'].strip().split(','))),
         team_id_range=decode_range(data['team_id_range'], 'team_id_rage'),
         account_prefix=data['account_prefix'],
         lock=bool(data['lock'])
@@ -127,7 +127,7 @@ def create_contest():
     dirname = ask_variable('directory name')
     if Path(dirname).is_dir():
         error('directory {} exists.'.format(dirname))
-    team_category_id = int(ask_variable('team category id'))
+    team_category_ids = list(map(int, ask_variable('team category ids (split by \',\', no space)').strip().split(',')))
     team_id_range = decode_range(ask_variable('team id range').strip(), 'team_id_range')
     account_prefix = ask_variable('account prefix').strip().replace(' ', '_')
 
@@ -149,7 +149,7 @@ def create_contest():
         with open(path, 'w', encoding='utf-8') as f:
             f.write('')
 
-    contest = Contest(path=root_path, title=title, team_category_id=team_category_id, team_id_range=team_id_range, account_prefix=account_prefix, lock=False)
+    contest = Contest(path=root_path, title=title, team_category_ids=team_category_ids, team_id_range=team_id_range, account_prefix=account_prefix, lock=False)
     contest.write()
 
 
@@ -176,6 +176,8 @@ def get_capacity():
 def contest_full():
     return contestant.get_contestants_num() == get_contest().get_capacity()
 
+def valid_team_category(cat):
+    return cat in get_contest().team_category_ids
 
 def occupy_teamid(team_id):
     return get_contest().occupy_teamid(team_id)

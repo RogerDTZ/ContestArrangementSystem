@@ -33,7 +33,7 @@ def export_domjudge_team(path, cid):
     item['name'] = c.name
     item['room'] = c.seat_formatted_str
     item['organization_id'] = c.aff
-    item['group_ids'] = [str(contest.get_contest().team_category_id)]
+    item['group_ids'] = [str(c.team_category)]
     data.append(item)
     write_json(path, data)
 
@@ -46,7 +46,7 @@ def export_domjudge_teams(path):
         item['name'] = c.name
         item['room'] = c.seat_formatted_str
         item['organization_id'] = c.aff
-        item['group_ids'] = [str(contest.get_contest().team_category_id)]
+        item['group_ids'] = [str(c.team_category)]
         data.append(item)
     write_json(path, data)
 
@@ -105,6 +105,11 @@ def export_contestants(path, print_account_password):
     else:
         header = ['编号', '姓名', '学校', '学号', '座位']
 
+    cur_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    timestamp_ws = workbook.add_worksheet('Timestamp')
+    timestamp_ws.activate()
+    timestamp_ws.write(0, 0, cur_time)
+    
     global_ws = workbook.add_worksheet('Global')
     global_ws.activate()
     # contestant id, name, aff, sid, seat, account, password
@@ -149,6 +154,8 @@ def export_contestants(path, print_account_password):
             row = 'A' + str(row_number)
             row_number += 1
             aff_ws.write_row(row, c, center_format)
+    
+    global_ws.activate()
 
     workbook.close()
 

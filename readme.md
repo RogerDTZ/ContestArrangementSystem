@@ -4,9 +4,7 @@
 
   * `name`: Name of the contest, used as the directory.
 
-  * `team_category`: `categoryid` of the target team category.
-
-    You should create a category that holds all teams that participate this contest.
+  * `team_category_ids`: `categoryid` of available team category, split by `,`, no space
 
   * `team_id_range`: the team id range. example: `300-399` [300, 400)
 
@@ -37,6 +35,7 @@ Contestant section:
   * `name`: Name of the contestant.
   * `sid`: Student ID (optional, required for school contestants).
   * `affiliation`: `shortname` of team_affiliation, which must exist in the database.
+  * `team_category`: team category, which must be one of the availble ids when creating the contest.
   * `map a seat`: Whether or not to map a seat for this contestant.
   * `generate password`: Generate password for this contestant.
 
@@ -54,12 +53,13 @@ Contestant section:
 
 * `cas contestant import contestants.tsv`: Import contestants.
 
-  The `tsv` file includes multiple lines. Each line is in the format: `name\tsid\taffiliation`. For example, `czz	12119999	txdy`.
+  The `tsv` file includes multiple lines. Each line is in the format: `name\tsid\taffiliation\tteam_category`. For example, `czz	12119999	txdy  3`.
 
   Raise exception when:
 
   * the pair of `(name, sid, affiliation)` conflicts with an existing contestant.
   * no available team id.
+  * team category is not valid
 
 * `cas contestant remove id`: Remove a contestant with the specified id.
 

@@ -59,8 +59,10 @@ def build_parser():
     contestant_seat.add_argument('--manual', '-m', dest='manual_seat', action='store_true', default=False, help='Manually seat the contestant.')
     contestant_seat.add_argument('--override', '-o', dest='override_seat', action='store_true', default=False, help='Override the current seat.')
     contestant_seat.add_argument('--random', '-r', dest='random_apply_seat', action='store_true', default=False, help='Randomly apply a seat (for automatic mode).')
+    contestant_seat.add_argument('--room-mask', type=str, default='', help='Use only the specified room(s) for seating.')
     contestant_seatall = contestant_subparsers.add_parser('seatall', help='Seat all unseated contestants.')
     contestant_seatall.add_argument('--random', '-r', dest='random_apply_seat', action='store_true', default=False, help='Randomly apply a seat (for automatic mode).')
+    contestant_seatall.add_argument('--room-mask', type=str, default='', help='Use only the specified room(s) for seating.')
     contestant_unseat = contestant_subparsers.add_parser('unseat', help='Unseat a contestant.')
     contestant_unseat.add_argument('id', type=int, nargs='?', default=-1, help='ID of the contestant to be unseated..')
     contestant_unseatall = contestant_subparsers.add_parser('unseatall', help='Unseat all seated contestants.')
@@ -69,7 +71,7 @@ def build_parser():
                                     help='ID of the contestant to ' 'generate password.')
     contestant_genpass.add_argument('--override', '-o', action='store_true', default=False, help='Override the existing password.')
     contestant_genpass.add_argument('--pwd-alphabet', type=str,
-                                    default=string.ascii_uppercase + string.digits,
+                                    default="ABCDEFGHJKMNPQRSTUVWXYZ23456789",
                                     help='Alphabet of the password.')
     contestant_genpass.add_argument('--pwd-length', type=int, default=8, help='Length of the password.')
 
@@ -162,9 +164,13 @@ def run_parsed_arguments(args):
             else:
                 contestant.show_information_all(config.args.print_password)
         if subaction == 'seat':
-            contestant.seat_contestant(config.args.id, manual=config.args.manual_seat, random_apply=config.args.random_apply_seat, override=config.args.override_seat)
+            contestant.seat_contestant(config.args.id, manual=config.args.manual_seat, random_apply=config.args.random_apply_seat, room_mask=config.args.room_mask, override=config.args.override_seat)
         if subaction == 'seatall':
-            contestant.seat_all_contestants(random_apply=config.args.random_apply_seat)
+            contestant.seat_all_contestants(random_apply=config.args.random_apply_seat, room_mask=(
+                config.args.room_mask.strip().split(',')
+                if config.args.room_mask is not None and len(config.args.room_mask) > 0
+                else None)
+            )
         if subaction == 'unseat':
             contestant.unseat_contestant(config.args.id)
         if subaction == 'unseatall':

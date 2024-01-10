@@ -113,6 +113,8 @@ def build_parser():
     export_domjudge = export_subparsers.add_parser('domjudge', help='Export accounts.tsv and teams.json for DOMJudge.')
     export_domjudge.add_argument('contestant_id', type=int, nargs='?', default=-1, const=-1, help='ID of the contestant to export. Ignore it to export all contestants.')
     export_contestants = export_subparsers.add_parser('contestant', help='Export contestant information.')
+    export_sid_score = export_subparsers.add_parser('sid_score', help='Export each SID\'s score from an domjudge-exported result.tsv')
+    export_sid_score.add_argument('result_file', type=str, help='Path to results.tsv exported from domjudge')
 
     return parser
 
@@ -237,6 +239,8 @@ def run_parsed_arguments(args):
             export.export_domjudge(config.args.contestant_id)
         if subaction == 'contestant':
             export.export_contestant_table()
+        if subaction == 'sid_score':
+            export.export_sid_score(config.args.result_file)
 
         return
 

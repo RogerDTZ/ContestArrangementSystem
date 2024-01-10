@@ -381,4 +381,7 @@ def get_contestant_password_state():
             has += 1
     return has == tot, (Fore.GREEN if has == tot else Fore.YELLOW) + '[{} / {}]'.format(has, tot) + Fore.RESET
 
-
+def get_cid_from_tid(team_id):
+    if team_id not in team_id2id:
+        error('Team {} does not exists.'.format(team_id))
+    return team_id2id[team_id]

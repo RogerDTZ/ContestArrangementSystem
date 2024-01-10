@@ -183,3 +183,30 @@ def export_contestant_table():
 
     info('Successfully export contestant data.')
 
+
+def export_sid_score(result_file):
+    (Path('.') / 'export').mkdir(exist_ok=True)
+    (Path('.') / 'export' / 'sid_score').mkdir(exist_ok=True)
+    output_file =  Path('.') / 'export' / 'sid_score' / 'sid_score.tsv'
+
+    with open(result_file, 'r', encoding='utf-8') as f:
+        scoreboard = [line.strip().split('\t') for line in f.readlines()[1: ]]
+    scoreboard = sorted(scoreboard, key=lambda record: (-int(record[3]), int(record[4])))
+
+    contestants = contestant.get_contestants()
+    
+    if len(contestants) != len(scoreboard):
+        warning(f"Expected {len(contestants)} lines, found {len(scoreboard)} lines in results.tsv")
+    
+    output = []
+    for record in scoreboard:
+        team_id = int(record[0])
+        person = contestants[contestant.get_cid_from_tid(team_id)]
+        score = int(record[3])
+        if person.sid and len(person.sid) > 0:
+            output.append('\t'.join([str(person.sid), person.name, str(score)]))
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('\t'.join(["学号", "姓名", "过题数"]) + '\n')
+        f.write('\n'.join(output))
+    info(f"Exported {len(output)} contestants' score with their SID")
